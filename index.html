@@ -41,7 +41,7 @@ textarea{width:100%;height:160px;font:12px monospace;background:var(--card);colo
 
 <div class="card" id="testCard" style="display:none">
  <b>Режим проверки на тестовой группе</b>
- <div class="row" style="margin-top:8px"><button id="bMake" class="sec">Создать 30 тестовых постов</button></div>
+ <div class="row" style="margin-top:8px"><button id="bMake" class="sec">Взять в список все посты тестовой группы</button></div>
 </div>
 
 <div class="card">
@@ -203,11 +203,10 @@ $("bReset").onclick = () => {
 };
 $("bMake").onclick = async () => {
   if (!token) { setStatus("Сначала «Разрешить доступ»", "bad"); return }
-  const texts = []; for (let i = 1; i <= 30; i++) texts.push(i % 10 === 0 ? "тест " + i + " благотворительно, запись по ссылке" : i % 7 === 0 ? "тест " + i + " без нужного слова" : "тест " + i + " запись открыта");
-  for (const t of texts) {
-    try { const r = await api("wall.post", { owner_id: -GID, from_group: 1, message: t }); const g = await api("wall.getById", { posts: "-" + GID + "_" + r.post_id }); const p = (Array.isArray(g) ? g : g.items)[0]; S.testList.push([r.post_id, p.date, 0]) } catch (e) { log("не создан: " + e.message); break }
-    await sleep(400);
-  }
-  L.del = S.testList; save(); refresh(); log("создано тестовых постов: " + S.testList.length);
+  try {
+    const r = await api("wall.get", { owner_id: -GID, count: 100 });
+    S.testList = r.items.map(p => [p.id, p.date, 0]);
+    L.del = S.testList; save(); refresh(); log("в список взяты все посты тестовой группы: " + S.testList.length);
+  } catch (e) { log("не получилось: " + e.message) }
 };
 </script></body></html>
