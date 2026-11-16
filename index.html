@@ -1,61 +1,213 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Проверка доступа к стене</title>
+<title>Очистка стены</title>
 <style>
-:root{--bg:#fff;--text:#222;--muted:#818c99;--line:#e7e8ec;--accent:#2688eb}
-@media (prefers-color-scheme:dark){:root{--bg:#19191a;--text:#e1e3e6;--muted:#939393;--line:#363738;--accent:#529ef4}}
-body{margin:0;padding:16px;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-h1{font-size:18px;margin:0 0 12px}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
-input{font:inherit;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text);width:180px}
-button{font:inherit;padding:7px 14px;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
-pre{white-space:pre-wrap;word-break:break-word;background:rgba(127,127,127,.12);padding:10px;border-radius:8px;font-size:13px;max-height:50vh;overflow:auto}
+:root{--bg:#fff;--card:#f5f6f8;--text:#222;--muted:#818c99;--line:#e7e8ec;--accent:#2688eb;--ok:#4bb34b;--bad:#e64646}
+@media (prefers-color-scheme:dark){:root{--bg:#19191a;--card:#232324;--text:#e1e3e6;--muted:#939393;--line:#363738;--accent:#529ef4;--ok:#5cc25c;--bad:#ff5c5c}}
+*{box-sizing:border-box}
+body{margin:0;padding:16px;background:var(--bg);color:var(--text);font:15px/1.45 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;max-width:760px}
+h1{font-size:19px;margin:0 0 4px}
 .muted{color:var(--muted);font-size:13px}
+.card{background:var(--card);border-radius:12px;padding:12px 14px;margin:12px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer}
+button.sec{background:transparent;color:var(--accent);border:1px solid var(--line)}
+button.danger{background:var(--bad)}
+button:disabled{opacity:.45;cursor:default}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:8px 0}
+.bar div{height:100%;background:var(--ok);width:0}
+.big{font-size:22px;font-weight:600}
+#log{white-space:pre-wrap;font-size:12px;max-height:240px;overflow:auto;background:var(--card);border-radius:8px;padding:8px}
+.status{font-weight:600}
+.status.bad{color:var(--bad)} .status.ok{color:var(--ok)}
+textarea{width:100%;height:160px;font:12px monospace;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:8px}
 </style></head><body>
-<h1>Проверка: даёт ли ВК мини-приложению право на стену</h1>
-<p class="muted">Только для теста на своей тестовой группе. Ключ никуда не отправляется, хранится только в этой вкладке.</p>
-<div class="row"><label>ID приложения <input id="app" value="54897590"></label>
-<button id="ask">1. Запросить доступ wall</button></div>
-<div class="row"><label>ID группы (цифры) <input id="gid" placeholder="например 123456"></label>
-<button id="read">2. Прочитать 3 поста</button></div>
-<div class="row"><label>Номер поста <input id="pid" placeholder="только тестовый!"></label>
-<button id="del">3. Удалить этот пост</button></div>
-<pre id="out">Нажмите 1.</pre>
+<h1 id="title">Очистка стены</h1>
+<div class="muted" id="sub">Загрузка…</div>
+
+<div class="card">
+ <div class="row" style="justify-content:space-between"><div><div class="big" id="cnt">0 из 0</div><div class="muted" id="cnt2"></div></div><div class="status" id="status"></div></div>
+ <div class="bar"><div id="bar"></div></div>
+ <div class="row">
+  <button id="bAuth">1. Разрешить доступ</button>
+  <button id="bCheck" class="sec" disabled>2. Проверить без удаления</button>
+  <button id="bTry" disabled>3. Удалить первые 20</button>
+  <button id="bAll" class="danger" disabled>4. Удалить всё остальное</button>
+  <button id="bStop" class="sec" disabled>Пауза</button>
+ </div>
+ <p class="muted">Удаляются только посты из списка, составленного по вашим правилам. Перед удалением каждый пост перепроверяется в ВК: дата, слова, не закреп, не благотворительный. Если что-то не сходится, пост пропускается. Вкладку можно закрыть и продолжить позже, всё запоминается.</p>
+</div>
+
+<div class="card" id="testCard" style="display:none">
+ <b>Режим проверки на тестовой группе</b>
+ <div class="row" style="margin-top:8px"><button id="bMake" class="sec">Создать 30 тестовых постов</button></div>
+</div>
+
+<div class="card">
+ <b>Журнал</b> <span class="muted">последние действия</span>
+ <div id="log"></div>
+ <div class="row" style="margin-top:8px"><button id="bJournal" class="sec">Показать список удалённых и пропущенных</button><button id="bReset" class="sec">Сбросить прогресс</button></div>
+ <textarea id="journal" style="display:none;margin-top:8px" readonly></textarea>
+</div>
+
 <script src="https://unpkg.com/@vkontakte/vk-bridge@2.15.11/dist/browser.min.js"></script>
+<script src="list.js"></script>
 <script>
-const bridge = window.vkBridge;
-const out = document.getElementById("out");
-let token = "", scope = "";
-const log = (t, o) => { out.textContent = t + (o === undefined ? "" : "\n" + JSON.stringify(o, null, 2)); };
-bridge.send("VKWebAppInit").catch(e => log("Не удалось подключиться к ВК (страницу нужно открыть внутри ВК)", e));
-document.getElementById("ask").onclick = async () => {
-  try {
-    const r = await bridge.send("VKWebAppGetAuthToken", { app_id: +document.getElementById("app").value, scope: "wall,groups" });
-    token = r.access_token; scope = r.scope;
-    log("Ответ ВК. Выданные права (scope): " + JSON.stringify(scope) + (String(scope).includes("wall") ? "\nПраво wall ВЫДАНО" : "\nПраво wall НЕ выдано"));
-  } catch (e) { log("ВК отказал в выдаче ключа", e); }
-};
-async function api(method, params) {
-  return bridge.send("VKWebAppCallAPIMethod", { method, params: Object.assign({ v: "5.199", access_token: token }, params) });
+const bridge = window.vkBridge, $ = id => document.getElementById(id);
+const APP_ID = 54897590, V = "5.199";
+const TEST = location.hash.includes("test");
+const MSK = 3 * 3600;
+let L = window.LIST || { del: [], keep: [], rules: [], history: {} };
+let GID = TEST ? 243347949 : L.gid;
+if (TEST) { L = { gid: GID, name: "тест стены", made: "", rules: [{ name: "тест: запись", from: null, to: null, words: ["запись"] }], del: [], keep: [], history: L.history }; $("testCard").style.display = "" }
+const KEY = "udal-" + GID;
+let S = { done: {}, skip: {}, testList: [] };
+try { Object.assign(S, JSON.parse(localStorage.getItem(KEY) || "{}")) } catch (e) {}
+if (TEST && S.testList.length) L.del = S.testList;
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) {} };
+let token = "", running = false, stopFlag = false;
+
+const log = (t, cls) => { const d = new Date().toLocaleTimeString("ru-RU"); $("log").textContent = d + "  " + t + "\n" + $("log").textContent.slice(0, 20000) };
+const setStatus = (t, cls) => { $("status").textContent = t; $("status").className = "status " + (cls || "") };
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function wordsRe(list) {
+  const w = (list || []).map(x => x.trim().toLowerCase()).filter(Boolean);
+  if (!w.length) return null;
+  const pats = w.map(x => x.endsWith("*") ? x.slice(0, -1).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[0-9a-zа-яё]*" : x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  return new RegExp("(^|[^0-9a-zа-яё])(" + pats.join("|") + ")(?![0-9a-zа-яё])", "i");
 }
-document.getElementById("read").onclick = async () => {
-  if (!token) return log("Сначала шаг 1");
+const H1 = wordsRe((L.history.w1 || "").split(",")), H2 = wordsRe((L.history.w2 || "").split(","));
+const RULES = L.rules.map(r => ({ ...r, re: wordsRe(r.words) }));
+const KEEP = new Set(L.keep);
+const postText = p => [p.text || ""].concat((p.copy_history || []).map(r => r.text || "")).join("\n");
+
+function refresh() {
+  const total = L.del.length, done = Object.keys(S.done).length, skip = Object.keys(S.skip).length;
+  $("cnt").textContent = "Удалено " + done + " из " + total;
+  $("cnt2").textContent = "пропущено при проверке: " + skip + ", осталось: " + (total - done - skip);
+  $("bar").style.width = (total ? (done + skip) / total * 100 : 0) + "%";
+}
+function errCode(e) {
+  const d = e && (e.error_data || e);
+  const r = d && (d.error_reason || d);
+  return (r && (r.error_code || (r.error && r.error.error_code))) || (d && d.error_code) || 0;
+}
+async function api(method, params) {
+  for (let i = 0; i < 8; i++) {
+    try {
+      const r = await bridge.send("VKWebAppCallAPIMethod", { method, params: Object.assign({ v: V, access_token: token }, params) });
+      return r.response;
+    } catch (e) {
+      const c = errCode(e);
+      if (c === 6 || c === 10 || c === 1) { await sleep(1500 * (i + 1)); continue }
+      const err = new Error("ВК ошибка " + c + ": " + JSON.stringify(e).slice(0, 200)); err.code = c; throw err;
+    }
+  }
+  const err = new Error("ВК не отвечает"); err.code = -1; throw err;
+}
+
+$("title").textContent = "Очистка стены: " + (L.name || "группа");
+$("sub").textContent = TEST ? "ТЕСТ на группе club" + GID : "Список составлен " + L.made + ". Правила: " + L.rules.map(r => r.name).join("; ") + ". Не трогаем: закреп, посты из него и благотворительные (" + L.keep.length + ").";
+refresh();
+bridge.send("VKWebAppInit").catch(() => setStatus("Откройте приложение внутри ВКонтакте", "bad"));
+
+$("bAuth").onclick = async () => {
   try {
-    const r = await api("wall.get", { owner_id: -Math.abs(+document.getElementById("gid").value), count: 3 });
-    log("wall.get работает. Посты:", (r.response.items || []).map(p => ({ id: p.id, text: (p.text || "").slice(0, 80) })));
-  } catch (e) { log("wall.get не сработал", e); }
+    const r = await bridge.send("VKWebAppGetAuthToken", { app_id: APP_ID, scope: "wall,groups" });
+    if (!String(r.scope).includes("wall")) { setStatus("ВК не дал доступ к стене", "bad"); return }
+    token = r.access_token;
+    const g = await api("groups.getById", { group_id: GID, fields: "is_admin" });
+    const grp = (g.groups || g)[0];
+    if (!grp.is_admin && !TEST) { setStatus("Вы не администратор группы " + grp.name, "bad"); return }
+    setStatus("Доступ есть: " + grp.name, "ok"); log("доступ к стене получен, группа: " + grp.name);
+    ["bCheck", "bTry", "bAll"].forEach(b => $(b).disabled = false);
+  } catch (e) { setStatus("Доступ не получен", "bad"); log("ошибка доступа: " + (e.message || JSON.stringify(e))) }
 };
-document.getElementById("del").onclick = async () => {
-  if (!token) return log("Сначала шаг 1");
-  const gid = Math.abs(+document.getElementById("gid").value), pid = +document.getElementById("pid").value;
-  if (!gid || !pid) return log("Укажите группу и номер тестового поста");
-  const b = document.getElementById("del");
-  if (b.dataset.sure !== pid + "_" + gid) { b.dataset.sure = pid + "_" + gid; b.textContent = "Точно удалить пост " + pid + "? Нажмите ещё раз"; return; }
-  b.dataset.sure = ""; b.textContent = "3. Удалить этот пост";
+
+function verify(p, row) {
+  const [id, date, ri] = row;
+  if (!p) return "поста уже нет";
+  if (p.date !== date) return "дата изменилась";
+  if (p.is_pinned) return "закреплён";
+  if (KEEP.has(id)) return "в списке «не трогать»";
+  const t = postText(p);
+  if (H1 && H1.test(t) && (!H2 || H2.test(t))) return "благотворительный";
+  const r = RULES[ri];
+  if (!r) return "нет правила";
+  if (r.from !== null && p.date < r.from) return "раньше периода правила";
+  if (r.to !== null && p.date >= r.to) return "позже периода правила";
+  if (r.re && !r.re.test(t)) return "нет нужных слов";
+  return "";
+}
+
+async function run(mode, limit) {
+  if (running) return; running = true; stopFlag = false;
+  ["bCheck", "bTry", "bAll", "bAuth"].forEach(b => $(b).disabled = true); $("bStop").disabled = false;
+  const todo = L.del.filter(r => !S.done[r[0]] && !S.skip[r[0]]);
+  let n = 0, ok = 0, sk = 0, fails = 0;
+  const check = mode === "check";
+  setStatus(check ? "Проверка…" : "Удаление…");
+  log(check ? "проверка без удаления, постов: " + todo.length : "удаление, постов в очереди: " + Math.min(todo.length, limit || 1e9));
   try {
-    const r = await api("wall.delete", { owner_id: -gid, post_id: pid });
-    log("wall.delete ответил:", r);
-  } catch (e) { log("wall.delete не сработал (это и есть ответ на вопрос)", e); }
+    for (let i = 0; i < todo.length && !stopFlag; i += 100) {
+      const chunk = todo.slice(i, i + 100);
+      const got = await api("wall.getById", { posts: chunk.map(r => "-" + GID + "_" + r[0]).join(",") });
+      const items = Array.isArray(got) ? got : (got.items || []);
+      const byId = {}; items.forEach(p => byId[p.id] = p);
+      for (const row of chunk) {
+        if (stopFlag || (limit && n >= limit)) break;
+        const p = byId[row[0]], why = verify(p, row);
+        if (why === "поста уже нет") { if (!check) { S.done[row[0]] = [Date.now(), "уже не было"]; } n++; continue }
+        if (why) { if (!check) S.skip[row[0]] = why; sk++; n++; log("пропуск №" + row[0] + ": " + why); continue }
+        if (check) { ok++; n++; continue }
+        try {
+          await api("wall.delete", { owner_id: -GID, post_id: row[0] });
+          S.done[row[0]] = [Date.now(), (p.text || "").slice(0, 60)]; ok++; fails = 0;
+        } catch (e) {
+          if (e.code === 9) { save(); setStatus("ВК ограничил частоту. Пауза на час, вкладку не закрывайте", "bad"); log("flood control, жду 60 минут"); await sleep(3600e3); continue }
+          if (e.code === 14) { stopFlag = true; setStatus("ВК просит капчу. Подождите пару часов и нажмите «Удалить всё остальное» снова", "bad"); log("капча, остановлено"); break }
+          if (e.code === 703) { stopFlag = true; setStatus("ВК требует двухэтапную защиту входа на аккаунте", "bad"); break }
+          if (e.code === 15 || e.code === 7 || e.code === 5) { stopFlag = true; setStatus("Нет права удалять: нажмите «Разрешить доступ» заново", "bad"); log(e.message); break }
+          fails++; log("№" + row[0] + ": " + e.message); if (fails >= 5) { stopFlag = true; setStatus("Много ошибок подряд, остановлено", "bad"); break }
+        }
+        n++;
+        if (n % 10 === 0) { save(); refresh() }
+        await sleep(350);
+      }
+      save(); refresh();
+      if (limit && n >= limit) break;
+    }
+  } catch (e) { setStatus("Остановлено: " + e.message, "bad"); log("остановлено: " + e.message) }
+  save(); refresh();
+  if (check) { setStatus("Проверка: можно удалить " + ok + ", будет пропущено " + sk, "ok"); log("проверка готова: удалить " + ok + ", пропустить " + sk) }
+  else if (!stopFlag || $("status").className.indexOf("bad") < 0) setStatus(limit ? "Удалено " + ok + ". Проверьте группу, потом «Удалить всё остальное»" : (n >= todo.length ? "Готово" : "Пауза"), "ok");
+  running = false; ["bCheck", "bTry", "bAll", "bAuth"].forEach(b => $(b).disabled = false); $("bStop").disabled = true;
+}
+$("bCheck").onclick = () => run("check");
+$("bTry").onclick = () => run("delete", 20);
+$("bAll").onclick = () => {
+  const b = $("bAll"); if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Точно? Нажмите ещё раз"; setTimeout(() => { b.dataset.sure = ""; b.textContent = "4. Удалить всё остальное" }, 6000); return }
+  b.dataset.sure = ""; b.textContent = "4. Удалить всё остальное"; run("delete");
+};
+$("bStop").onclick = () => { stopFlag = true; setStatus("Останавливаю…") };
+$("bJournal").onclick = () => {
+  const lines = ["номер;что;когда;текст"];
+  for (const [id, v] of Object.entries(S.done)) lines.push(id + ";удалён;" + new Date(v[0]).toLocaleString("ru-RU") + ";" + String(v[1]).replace(/[;\n]/g, " "));
+  for (const [id, v] of Object.entries(S.skip)) lines.push(id + ";пропущен;;" + v);
+  $("journal").style.display = ""; $("journal").value = lines.join("\n");
+};
+$("bReset").onclick = () => {
+  const b = $("bReset"); if (b.dataset.sure !== "1") { b.dataset.sure = "1"; b.textContent = "Сбросить? Нажмите ещё раз"; return }
+  S = { done: {}, skip: {}, testList: TEST ? [] : S.testList }; if (TEST) L.del = []; save(); refresh(); b.dataset.sure = ""; b.textContent = "Сбросить прогресс"; log("прогресс сброшен (посты в ВК это не возвращает)");
+};
+$("bMake").onclick = async () => {
+  if (!token) { setStatus("Сначала «Разрешить доступ»", "bad"); return }
+  const texts = []; for (let i = 1; i <= 30; i++) texts.push(i % 10 === 0 ? "тест " + i + " благотворительно, запись по ссылке" : i % 7 === 0 ? "тест " + i + " без нужного слова" : "тест " + i + " запись открыта");
+  for (const t of texts) {
+    try { const r = await api("wall.post", { owner_id: -GID, from_group: 1, message: t }); const g = await api("wall.getById", { posts: "-" + GID + "_" + r.post_id }); const p = (Array.isArray(g) ? g : g.items)[0]; S.testList.push([r.post_id, p.date, 0]) } catch (e) { log("не создан: " + e.message); break }
+    await sleep(400);
+  }
+  L.del = S.testList; save(); refresh(); log("создано тестовых постов: " + S.testList.length);
 };
 </script></body></html>
