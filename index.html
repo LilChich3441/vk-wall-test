@@ -50,7 +50,9 @@ document.getElementById("del").onclick = async () => {
   if (!token) return log("Сначала шаг 1");
   const gid = Math.abs(+document.getElementById("gid").value), pid = +document.getElementById("pid").value;
   if (!gid || !pid) return log("Укажите группу и номер тестового поста");
-  if (!confirm("Удалить пост " + pid + " в группе " + gid + "? Только тестовый пост!")) return;
+  const b = document.getElementById("del");
+  if (b.dataset.sure !== pid + "_" + gid) { b.dataset.sure = pid + "_" + gid; b.textContent = "Точно удалить пост " + pid + "? Нажмите ещё раз"; return; }
+  b.dataset.sure = ""; b.textContent = "3. Удалить этот пост";
   try {
     const r = await api("wall.delete", { owner_id: -gid, post_id: pid });
     log("wall.delete ответил:", r);
