@@ -1,7 +1,37 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/" xmlns:atom="http://www.w3.org/2005/Atom">
-<channel><title>Тест импорта VK</title><link>https://lilchich3441.github.io/vk-wall-test/rss-test/post-1.html</link><description>Вымышленные записи для проверки RSS.</description>
-<atom:link href="https://lilchich3441.github.io/vk-wall-test/rss-test/feed.xml" rel="self" type="application/rss+xml" />
-<item><title>RSS-тест 2: запись с изображением</title><link>https://lilchich3441.github.io/vk-wall-test/rss-test/post-2.html</link><guid isPermaLink="true">https://lilchich3441.github.io/vk-wall-test/rss-test/post-2.html</guid><pubDate>Sun, 22 Nov 2026 15:12:33 GMT</pubDate><description>Вторая вымышленная запись. Проверяем, добавит ли VK JPEG на стену.</description><content:encoded><![CDATA[<p>Вторая вымышленная запись. Проверяем, добавит ли VK JPEG на стену.</p><img src="https://lilchich3441.github.io/vk-wall-test/rss-test/test.jpg" width="640" height="360" alt="Тестовое изображение">]]></content:encoded><enclosure url="https://lilchich3441.github.io/vk-wall-test/rss-test/test.jpg" length="6785" type="image/jpeg" /><media:content url="https://lilchich3441.github.io/vk-wall-test/rss-test/test.jpg" type="image/jpeg" medium="image" /></item>
-<item><title>RSS-тест 1: текстовая запись</title><link>https://lilchich3441.github.io/vk-wall-test/rss-test/post-1.html</link><guid isPermaLink="true">https://lilchich3441.github.io/vk-wall-test/rss-test/post-1.html</guid><pubDate>Sun, 22 Nov 2026 14:58:53 GMT</pubDate><description>Первая вымышленная запись. Проверяем, какой текст VK перенесёт из RSS.</description><content:encoded><![CDATA[<p>Первая вымышленная запись. Проверяем, какой текст VK перенесёт из RSS.</p>]]></content:encoded></item>
-</channel></rss>
+  <channel>
+    <title>Тест импорта VK</title>
+    <link>https://lilchich3441.github.io/vk-wall-test/rss-test/post-1.html</link>
+    <description>Вымышленные записи для проверки RSS.</description>
+    <atom:link href="https://lilchich3441.github.io/vk-wall-test/rss-test/feed.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>RSS-тест 3: статья с изображением</title>
+      <link>https://lilchich3441.github.io/vk-wall-test/rss-test/post-3.html</link>
+      <guid isPermaLink="true">https://lilchich3441.github.io/vk-wall-test/rss-test/post-3.html</guid>
+      <pubDate>Sun, 22 Nov 2026 15:28:47 GMT</pubDate>
+      <description>Вымышленная запись для проверки: сохранит ли VK изображение внутри статьи.</description>
+      <content:encoded><![CDATA[<p>Вымышленная запись для проверки: сохранит ли VK изображение внутри статьи.</p><img src="https://lilchich3441.github.io/vk-wall-test/rss-test/test.jpg" width="640" height="360" alt="Тестовое изображение">]]></content:encoded>
+      <enclosure url="https://lilchich3441.github.io/vk-wall-test/rss-test/test.jpg" length="6785" type="image/jpeg" />
+      <media:content url="https://lilchich3441.github.io/vk-wall-test/rss-test/test.jpg" type="image/jpeg" medium="image" />
+    </item>
+    <item>
+      <title>RSS-тест 2: запись с изображением</title>
+      <link>https://lilchich3441.github.io/vk-wall-test/rss-test/post-2.html</link>
+      <guid isPermaLink="true">https://lilchich3441.github.io/vk-wall-test/rss-test/post-2.html</guid>
+      <pubDate>Sun, 22 Nov 2026 15:12:33 GMT</pubDate>
+      <description>Вторая вымышленная запись. Проверяем, добавит ли VK JPEG на стену.</description>
+      <content:encoded><![CDATA[<p>Вторая вымышленная запись. Проверяем, добавит ли VK JPEG на стену.</p><img src="https://lilchich3441.github.io/vk-wall-test/rss-test/test.jpg" width="640" height="360" alt="Тестовое изображение">]]></content:encoded>
+      <enclosure url="https://lilchich3441.github.io/vk-wall-test/rss-test/test.jpg" length="6785" type="image/jpeg" />
+      <media:content url="https://lilchich3441.github.io/vk-wall-test/rss-test/test.jpg" type="image/jpeg" medium="image" />
+    </item>
+    <item>
+      <title>RSS-тест 1: текстовая запись</title>
+      <link>https://lilchich3441.github.io/vk-wall-test/rss-test/post-1.html</link>
+      <guid isPermaLink="true">https://lilchich3441.github.io/vk-wall-test/rss-test/post-1.html</guid>
+      <pubDate>Sun, 22 Nov 2026 14:58:53 GMT</pubDate>
+      <description>Первая вымышленная запись. Проверяем, какой текст VK перенесёт из RSS.</description>
+      <content:encoded><![CDATA[<p>Первая вымышленная запись. Проверяем, какой текст VK перенесёт из RSS.</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>
